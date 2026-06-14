@@ -1,0 +1,17 @@
+[tasks.generate]
+script = [
+    "curl https://api-docs.firefly-iii.org/firefly-iii-6.5.5-v1.yaml --create-dirs -o /tmp/firefly-iii.yaml --user-agent 'Wget/1.0.0'",
+    "npx openapi-generator-cli generate -i /tmp/firefly-iii.yaml -o packages/firefly-iii -g rust --package-name firefly-iii --additional-properties=bestFitInt=true,library=reqwest-trait,supportMiddleware=true,topLevelApiClient=true,useBonBuilder=true,useSingleRequestParameter=true",
+    "sed -i.bak \"s/models::models::/models::/\" packages/firefly-iii/src/apis/configuration_api.rs",
+    "sed -i.bak \"s/, value.to_string()/, serde_json::to_string(\\&value)?/\" packages/firefly-iii/src/apis/configuration_api.rs",
+    "find packages/firefly-iii/src -type f -exec sed -i.bak \"s|^/// $||g\" {} \\;",
+    "find packages/firefly-iii/src -name '*.bak' -type f -delete",
+    "mv packages/firefly-iii/README.md packages/firefly-iii/API-README.md",
+    "cp packages/firefly-iii/README.template.md packages/firefly-iii/README.md",
+    "cargo run -p scripts --bin modify",
+    "cargo clippy --fix --allow-dirty",
+    "npx prettier --write .",
+    "cargo fmt",
+    "cargo sort --workspace",
+]
+workspace = false
